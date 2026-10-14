@@ -41,31 +41,37 @@ func (r Repository) query(ctx context.Context, query string, args ...any) (json.
 }
 
 func (r Repository) List(ctx context.Context) (json.RawMessage, error) {
-	return r.query(ctx, "SELECT * FROM products ORDER BY product_id")
+	return r.query(ctx, "SELECT * FROM products p JOIN categories c ON p.category_id = c.category_id JOIN suppliers s ON p.supplier_id = s.supplier_id ORDER BY p.product_id")
 }
+
 func (r Repository) Get(ctx context.Context, id int) (json.RawMessage, error) {
-	return r.query(ctx, "SELECT * FROM products WHERE product_id = $1", id)
+	return r.query(ctx, "SELECT * FROM products p JOIN categories c ON p.category_id = c.category_id JOIN suppliers s ON p.supplier_id = s.supplier_id WHERE p.product_id = $1", id)
 }
+
 func (r Repository) Create(ctx context.Context, p Input) (json.RawMessage, error) {
 	return r.query(ctx, `INSERT INTO products (product_name, supplier_id, category_id, quantity_per_unit,
-        unit_price, units_in_stock, units_on_order, reorder_level, discontinued)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+		unit_price, units_in_stock, units_on_order, reorder_level, discontinued)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
 		p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice,
 		p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued)
 }
+
 func (r Repository) Update(ctx context.Context, id int, p Input) (json.RawMessage, error) {
 	return r.query(ctx, `UPDATE products SET product_name=$1, supplier_id=$2, category_id=$3,
-        quantity_per_unit=$4, unit_price=$5, units_in_stock=$6, units_on_order=$7,
-        reorder_level=$8, discontinued=$9 WHERE product_id=$10 RETURNING *`,
+		quantity_per_unit=$4, unit_price=$5, units_in_stock=$6, units_on_order=$7,
+		reorder_level=$8, discontinued=$9 WHERE product_id=$10 RETURNING *`,
 		p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice,
 		p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued, id)
 }
+
 func (r Repository) Delete(ctx context.Context, id int) (json.RawMessage, error) {
 	return r.query(ctx, "DELETE FROM products WHERE product_id = $1 RETURNING *", id)
 }
+
 func (r Repository) Categories(ctx context.Context) (json.RawMessage, error) {
 	return r.query(ctx, "SELECT * FROM categories ORDER BY category_id")
 }
+
 func (r Repository) Suppliers(ctx context.Context) (json.RawMessage, error) {
 	return r.query(ctx, "SELECT * FROM suppliers ORDER BY supplier_id")
 }
